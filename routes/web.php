@@ -47,6 +47,10 @@ Route::middleware(['auth'])->group(function () {
     // Pengembalian Aset
     Route::get('/peminjaman/{peminjaman}/pengembalian', [PeminjamanController::class, 'formPengembalian'])->name('peminjaman.pengembalian.form');
     Route::post('/peminjaman/{peminjaman}/pengembalian', [PeminjamanController::class, 'prosesPengembalian'])->name('peminjaman.pengembalian.proses');
+
+    // Form & Proses Pengembalian
+    Route::get('/pengembalian/{id}', [App\Http\Controllers\PeminjamanController::class, 'pengembalianForm'])->name('peminjaman.pengembalian.form');
+    Route::post('/pengembalian/{id}', [App\Http\Controllers\PeminjamanController::class, 'prosesPengembalian'])->name('peminjaman.pengembalian.proses');
 });
 
 // ==========================================

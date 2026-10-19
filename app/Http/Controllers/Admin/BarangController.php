@@ -30,17 +30,27 @@ class BarangController extends Controller
             'kategori' => 'required',
             'jumlah_total' => 'required|integer|min:1',
             'kondisi' => 'required',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'deskripsi' => 'required',
+            'lokasi_penyimpanan' => 'nullable'
         ]);
 
         $data = $request->all();
         $data['jumlah_tersedia'] = $request->jumlah_total;
 
-        // Simpan langsung ke folder public/uploads
+        // PERBAIKAN: Simpan langsung ke folder public/uploads dengan penamaan aman
         if ($request->hasFile('foto')) {
             $file = $request->file('foto');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $file->move(public_path('uploads/barang_fotos'), $filename);
+            // Menghasilkan nama file acak untuk mencegah error karena spasi/simbol
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $destinationPath = public_path('uploads/barang_fotos');
+
+            // Membuat folder secara otomatis jika belum ada di server
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+
+            $file->move($destinationPath, $filename);
             $data['foto'] = 'uploads/barang_fotos/' . $filename;
         }
 
@@ -67,31 +77,55 @@ class BarangController extends Controller
             'kategori' => 'required',
             'jumlah_total' => 'required|integer|min:1',
             'kondisi' => 'required',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'deskripsi' => 'required'
         ]);
 
         $data = $request->except('foto');
 
-        // Perbaikan kode penghitungan selisih stok yang sebelumnya terpotong
+        // Perbaikan penghitungan selisih stok
         $selisih = $request->jumlah_total - $barang->jumlah_total;
         $data['jumlah_tersedia'] = $barang->jumlah_tersedia + $selisih;
 
-        // Simpan langsung ke folder public/uploads
+        // PERBAIKAN: Simpan langsung ke folder public/uploads dengan penamaan aman
         if ($request->hasFile('foto')) {
-            // Hapus foto fisik yang lama jika ada
+            // Hapus foto fisik yang lama jika ada untuk menghemat penyimpanan
             if ($barang->foto && file_exists(public_path($barang->foto))) {
                 unlink(public_path($barang->foto));
             }
             
             // Upload foto baru
             $file = $request->file('foto');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $file->move(public_path('uploads/barang_fotos'), $filename);
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $destinationPath = public_path('uploads/barang_fotos');
+
+            // Membuat folder secara otomatis jika belum ada di server
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+
+            $file->move($destinationPath, $filename);
             $data['foto'] = 'uploads/barang_fotos/' . $filename;
         }
 
         $barang->update($data);
 
         return redirect()->route('admin.barang.index')->with('success', 'Data Aset berhasil diperbarui!');
+    }
+    
+    // Menghapus aset dari database beserta file fotonya
+    public function destroy($id)
+    {
+        $barang = \App\Models\Barang::findOrFail($id);
+
+        // Hapus foto fisik dari folder public jika file tersebut ada
+        if ($barang->foto && file_exists(public_path($barang->foto))) {
+            unlink(public_path($barang->foto));
+        }
+
+        // Hapus data dari database
+        $barang->delete();
+
+        return redirect()->route('admin.barang.index')->with('success', 'Data Aset dan fotonya berhasil dihapus permanen!');
     }
 }

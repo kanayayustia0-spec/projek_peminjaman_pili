@@ -8,9 +8,18 @@ use Illuminate\Database\Eloquent\Model;
 class Barang extends Model
 {
     use HasFactory;
-
-    protected $guarded = ['id'];
-
+    protected $fillable = [
+        'kode_inventaris',
+        'nama',
+        'kategori',
+        'jumlah_total',
+        'jumlah_tersedia',
+        'kondisi',
+        'lokasi_penyimpanan',
+        'deskripsi',
+        'foto', 
+    ];
+    
     // Relasi: Barang ini sedang dipegang oleh siapa?
     public function pic()
     {

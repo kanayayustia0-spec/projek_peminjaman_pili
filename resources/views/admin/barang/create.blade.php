@@ -81,7 +81,7 @@
         <!-- Upload Gambar -->
         <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700">Foto Aset (Opsional)</label>
-            <input type="file" name="gambar" accept="image/png, image/jpeg" class="w-full border border-gray-300 rounded-lg p-2 mt-1 bg-gray-50">
+            <input type="file" name="foto" accept="image/png, image/jpeg" class="w-full border border-gray-300 rounded-lg p-2 mt-1 bg-gray-50">
         </div>
 
         <div class="flex justify-end">

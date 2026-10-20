@@ -86,8 +86,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:admin'])->group(functi
 
         // Stock Opname
         Route::get('/stock-opname', [StockOpnameController::class, 'index'])->name('stock-opname.index');
-Route::get('/stock-opname/buat', [StockOpnameController::class, 'create'])->name('stock-opname.create');
-Route::post('/stock-opname', [StockOpnameController::class, 'store'])->name('stock-opname.store');
+        Route::get('/stock-opname/buat', [StockOpnameController::class, 'create'])->name('stock-opname.create');
+        Route::post('/stock-opname', [StockOpnameController::class, 'store'])->name('stock-opname.store');
+        // Menu Stock Opname (Admin Pengelola)
+        Route::get('/stock-opname', [App\Http\Controllers\StockOpnameController::class, 'index'])->name('admin.stock_opname.index');
+        Route::post('/stock-opname/{id}', [App\Http\Controllers\StockOpnameController::class, 'update'])->name('admin.stock_opname.update');
     });
 
     // ----------------------------------------------------

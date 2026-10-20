@@ -16,7 +16,7 @@
         
         <!-- Header Struk -->
         <div class="text-center mb-8 border-b-2 border-dashed border-gray-300 pb-6">
-            <h1 class="text-3xl font-extrabold text-gray-900 tracking-widest uppercase">YAYASAN PILI</h1>
+            <h1 class="text-3xl font-extrabold text-gray-900 tracking-widest uppercase">PILI</h1>
             <p class="text-sm text-gray-500">Green Network - Sistem Manajemen Aset</p>
             <p class="text-xs text-gray-400 mt-2">====================================</p>
             <h2 class="text-xl font-bold text-gray-800 mt-4 uppercase">Detail Transaksi Aset</h2>
@@ -98,7 +98,7 @@
             <div class="flex justify-center h-12 mt-2 gap-1 opacity-50">
                 <div class="w-1 bg-black h-full"></div><div class="w-3 bg-black h-full"></div><div class="w-1 bg-black h-full"></div><div class="w-2 bg-black h-full"></div><div class="w-4 bg-black h-full"></div><div class="w-1 bg-black h-full"></div><div class="w-3 bg-black h-full"></div><div class="w-1 bg-black h-full"></div><div class="w-2 bg-black h-full"></div><div class="w-1 bg-black h-full"></div>
             </div>
-            <p class="text-[10px] text-gray-500 mt-4">Simpan struk digital ini sebagai bukti sah peminjaman di Yayasan PILI.</p>
+            <p class="text-[10px] text-gray-500 mt-4">Simpan struk digital ini sebagai bukti sah peminjaman di PILI.</p>
         </div>
         
     </div>

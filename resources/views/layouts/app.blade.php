@@ -51,7 +51,7 @@
                             
                             @if(Auth::guard('admin')->user()->role == 'pengelola')
                                 <a href="{{ route('admin.barang.index') }}" class="text-gray-500 hover:text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-gray-300 text-sm font-medium transition">Register Aset</a>
-                                <a href="#" class="text-gray-500 hover:text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-gray-300 text-sm font-medium transition">Stock Opname</a>
+                                <a href="{{ route('admin.stock-opname.index') }}" class="text-gray-500 hover:text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-gray-300 text-sm font-medium transition">Stock Opname</a>
                             @endif
 
                             <!-- TAMBAHAN MENU ADMIN PERSETUJUAN -->

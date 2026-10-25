@@ -11,39 +11,40 @@ use Carbon\Carbon;
 
 class PeminjamanController extends Controller
 {
-   public function index(Request $request)
-{
-    // Jika Anda memiliki fitur pencarian
-    $query = \App\Models\Barang::query();
-    
-    if ($request->has('search')) {
-        $query->where('nama', 'like', '%' . $request->search . '%')
-              ->orWhere('kode_inventaris', 'like', '%' . $request->search . '%')
-              ->orWhere('kategori', 'like', '%' . $request->search . '%');
+    public function index(Request $request)
+    {
+        $query = Barang::query();
+        
+        if ($request->has('search')) {
+            $query->where('nama', 'like', '%' . $request->search . '%')
+                  ->orWhere('kode_inventaris', 'like', '%' . $request->search . '%')
+                  ->orWhere('kategori', 'like', '%' . $request->search . '%');
+        }
+
+        $kategoriBarang = $query->get()->groupBy('kategori');
+
+        return view('user.peminjaman.index', compact('kategoriBarang'));
     }
 
-    // Mengambil barang dan mengelompokkannya berdasarkan kategori
-    $kategoriBarang = $query->get()->groupBy('kategori');
+    // Menampilkan halaman cara kerja
+    public function caraKerja()
+    {
+        return view('user.cara_kerja');
+    }
 
-    // Mengirimkan data $kategoriBarang ke view
-    // Sesuaikan nama view-nya jika berbeda (misal 'peminjaman.index' atau 'user.peminjaman.index')
-    return view('user.peminjaman.index', compact('kategoriBarang'));
-}
-// Menampilkan riwayat peminjaman untuk user yang sedang login
+    // Menampilkan riwayat peminjaman untuk user yang sedang login
     public function riwayat()
     {
-        // Mengambil data peminjaman khusus untuk user yang sedang login
-        $peminjamans = \App\Models\Peminjaman::where('user_id', auth()->id())
+        $peminjamans = Peminjaman::where('user_id', auth()->id())
                         ->orderBy('created_at', 'desc')
                         ->get();
 
-        // Mengarahkan ke file view riwayat (sesuaikan jika nama foldernya berbeda)
         return view('user.peminjaman.riwayat', compact('peminjamans'));
     }
+
     // Menampilkan form permohonan & keranjang barang
     public function create()
     {
-        // Katalog barang dikirim ke view (dikelompokkan per kategori)
         $barangs = Barang::where('status', 'Tersedia')
                          ->where('jumlah_tersedia', '>', 0)
                          ->get()
@@ -66,10 +67,8 @@ class PeminjamanController extends Controller
             'items.*.jumlah' => 'required|integer|min:1'
         ]);
 
-        // Hitung SLA batas waktu approval (2 hari kerja)
         $batasWaktu = Carbon::now()->addWeekdays(2);
 
-        // 1. Simpan Header Transaksi
         $peminjaman = Peminjaman::create([
             'user_id' => Auth::id(),
             'tujuan_peminjaman' => $request->tujuan_peminjaman,
@@ -81,7 +80,6 @@ class PeminjamanController extends Controller
             'status_keseluruhan' => 'Menunggu Persetujuan'
         ]);
 
-        // 2. Simpan Daftar Barang (Items)
         foreach ($request->items as $item) {
             $barang = Barang::find($item['barang_id']);
             PeminjamanItem::create([
@@ -99,13 +97,14 @@ class PeminjamanController extends Controller
     // Menampilkan detail pengajuan (Preview)
     public function show(Peminjaman $peminjaman)
     {
-        // Pastikan hanya pemilik yang bisa melihat
-        if ($peminjaman->user_id !== Auth::id()) abort(403);
+        if ($peminjaman->user_id !== Auth::id()) {
+            abort(403);
+        }
         
         return view('user.peminjaman.show', compact('peminjaman'));
     }
 
-    // Proses User menerima aset (Tanda tangan digital & Checkbox BASTA)
+    // Proses User menerima aset
     public function terimaAset(Request $request, Peminjaman $peminjaman)
     {
         $request->validate([
@@ -118,7 +117,6 @@ class PeminjamanController extends Controller
             'konfirmasi_checkbox_peminjam' => true
         ]);
 
-        // Update status keseluruhan
         $peminjaman->update(['status_keseluruhan' => 'Sedang Digunakan']);
 
         return back()->with('success', 'Aset berhasil diterima.');
@@ -127,16 +125,14 @@ class PeminjamanController extends Controller
     // Menampilkan halaman Katalog Barang
     public function katalog()
     {
-        // Mengambil semua barang, dikelompokkan berdasarkan kategori
-        $kategoriBarang = \App\Models\Barang::all()->groupBy('kategori');
+        $kategoriBarang = Barang::all()->groupBy('kategori');
         
         return view('user.peminjaman.katalog', compact('kategoriBarang'));
     }
 
-    // Menampilkan Form Pengembalian (Wajib foto & catatan)
+    // Menampilkan Form Pengembalian
     public function formPengembalian(Peminjaman $peminjaman)
     {
-        // Cek apakah statusnya valid untuk dikembalikan
         if (!in_array($peminjaman->status_keseluruhan, ['Aset Diserahkan', 'Sedang Digunakan', 'Terlambat'])) {
             return redirect()->route('peminjaman.index')->with('error', 'Status peminjaman belum valid untuk dikembalikan.');
         }
@@ -152,7 +148,6 @@ class PeminjamanController extends Controller
             'catatan_kondisi_peminjam' => 'required|string'
         ]);
 
-        // Upload Foto ke folder public/uploads/pengembalian agar tampilannya mudah diakses
         $fotoPath = null;
         if ($request->hasFile('foto_kondisi_akhir')) {
             $file = $request->file('foto_kondisi_akhir');
@@ -161,7 +156,6 @@ class PeminjamanController extends Controller
             $fotoPath = 'uploads/pengembalian/' . $filename;
         }
 
-        // Simpan ke tabel Pengembalian
         \App\Models\Pengembalian::create([
             'peminjaman_id' => $peminjaman->id,
             'tanggal_pengembalian' => now(), 
@@ -169,7 +163,6 @@ class PeminjamanController extends Controller
             'catatan_kondisi_peminjam' => $request->catatan_kondisi_peminjam,
         ]);
         
-        // Ubah status ke Menunggu Konfirmasi agar diproses oleh Admin
         $peminjaman->update(['status_keseluruhan' => 'Menunggu Konfirmasi Pengembalian']);
 
         return redirect()->route('peminjaman.index')->with('success', 'Pengembalian diajukan. Menunggu pengecekan Admin.');

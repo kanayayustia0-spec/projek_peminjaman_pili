@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Peminjaman;
 
@@ -18,7 +19,7 @@ class PersetujuanController extends Controller
         return view('admin.persetujuan.index', compact('peminjamans'));
     }
 
-    // Menampilkan detail form 5W dan Keranjang untuk di-review
+    // Menampilkan detail form dan keranjang untuk di-review
     public function show($id)
     {
         $peminjaman = Peminjaman::with(['user', 'items.barang'])->findOrFail($id);
@@ -47,7 +48,7 @@ class PersetujuanController extends Controller
         $peminjaman->status_persetujuan = 'Ditolak';
         $peminjaman->status_keseluruhan = 'Ditolak';
         
-        // (Opsional) Jika di database Anda ada kolom alasan_penolakan, hapus tanda komentar di bawah ini:
+        // (Opsional) Jika di database Anda ada kolom alasan_penolakan:
         // $peminjaman->alasan_penolakan = $request->alasan;
         
         $peminjaman->save();

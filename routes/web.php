@@ -9,73 +9,76 @@ use App\Http\Controllers\Admin\BarangController;
 use App\Http\Controllers\Admin\BastaController;
 use App\Http\Controllers\Admin\LaporanController;
 use App\Http\Controllers\Admin\StockOpnameController;
+use App\Http\Controllers\Admin\PersetujuanController;
+use App\Http\Controllers\AdminRegisterController;
 
 // ==========================================
-// ROUTE AUTENTIKASI (LOGIN & LOGOUT)
+// ROUTE AUTENTIKASI (LOGIN, LOGOUT, REGISTER)
 // ==========================================
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Halaman Beranda (Hero + Pencarian Data Barang)
-    Route::get('/dashboard', [App\Http\Controllers\PeminjamanController::class, 'index'])->name('dashboard');
-    
-    // Halaman Cara Kerja (Terpisah)
-    Route::get('/cara-kerja', [App\Http\Controllers\PeminjamanController::class, 'caraKerja'])->name('cara-kerja');
-    
-    // Halaman Riwayat Peminjaman (Terpisah)
-    Route::get('/riwayat-peminjaman', [App\Http\Controllers\PeminjamanController::class, 'riwayat'])->name('peminjaman.riwayat');
+Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
+Route::post('/register', [AuthController::class, 'register'])->name('register.post');
+
+// Halaman Informasi Umum (Tanpa Login)
+Route::get('/cara-kerja', [PeminjamanController::class, 'caraKerja'])->name('cara-kerja');
+
 
 // ==========================================
-// ROUTES UNTUK PEMINJAM (USER)
+// ROUTES UNTUK PEMINJAM (USER) - WAJIB LOGIN
 // ==========================================
 Route::middleware(['auth'])->group(function () {
-    // Dashboard User
+    
+    // Dashboard & Beranda User
     Route::get('/dashboard', [PeminjamanController::class, 'index'])->name('dashboard');
-    
-    // Katalog Barang (BARU)
+
+    // Katalog Barang 
     Route::get('/katalog-barang', [PeminjamanController::class, 'katalog'])->name('peminjaman.katalog');
-    
+
+    // Riwayat Peminjaman
+    Route::get('/riwayat-peminjaman', [PeminjamanController::class, 'riwayat'])->name('peminjaman.riwayat');
+
     // Alur Peminjaman
     Route::get('/peminjaman/buat', [PeminjamanController::class, 'create'])->name('peminjaman.create');
     Route::post('/peminjaman', [PeminjamanController::class, 'store'])->name('peminjaman.store');
     Route::get('/peminjaman/{peminjaman}', [PeminjamanController::class, 'show'])->name('peminjaman.show');
-    
+
     // Terima Aset (BASTA)
     Route::post('/peminjaman/{peminjaman}/terima', [PeminjamanController::class, 'terimaAset'])->name('peminjaman.terima');
-    
-    // Pengembalian Aset
+
+    // Pengembalian Aset (Sinkron dengan formPengembalian di Controller)
     Route::get('/peminjaman/{peminjaman}/pengembalian', [PeminjamanController::class, 'formPengembalian'])->name('peminjaman.pengembalian.form');
     Route::post('/peminjaman/{peminjaman}/pengembalian', [PeminjamanController::class, 'prosesPengembalian'])->name('peminjaman.pengembalian.proses');
 
-    // Form & Proses Pengembalian
-    Route::get('/pengembalian/{id}', [App\Http\Controllers\PeminjamanController::class, 'pengembalianForm'])->name('peminjaman.pengembalian.form');
-    Route::post('/pengembalian/{id}', [App\Http\Controllers\PeminjamanController::class, 'prosesPengembalian'])->name('peminjaman.pengembalian.proses');
 });
+
 
 // ==========================================
 // ROUTES UNTUK ADMIN (PENGELOLA & PERSETUJUAN)
 // ==========================================
 Route::prefix('admin')->name('admin.')->middleware(['auth:admin'])->group(function () {
-    
+
     // Dashboard & Rekap (Bisa diakses kedua role admin)
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/laporan-peminjaman', [DashboardController::class, 'rekapPeminjaman'])->name('rekap');
-    
+
     // ----------------------------------------------------
     // KHUSUS ADMIN PENGELOLA
     // ----------------------------------------------------
     Route::middleware('can:is-pengelola')->group(function () {
+        
         // Kelola Barang
         Route::resource('barang', BarangController::class);
-        
+
         // Approval Tahap 1
         Route::post('/peminjaman/{peminjaman}/approve-pengelola', [ApprovalController::class, 'approvePengelola'])->name('approve.pengelola');
-        
+
         // BASTA (Serah Terima)
         Route::get('/peminjaman/{peminjaman}/basta', [BastaController::class, 'create'])->name('basta.create');
         Route::post('/peminjaman/{peminjaman}/basta', [BastaController::class, 'store'])->name('basta.store');
-        
+
         // Verifikasi Pengembalian
         Route::get('/peminjaman/{peminjaman}/verifikasi-kembali', [ApprovalController::class, 'formVerifikasiPengembalian'])->name('pengembalian.verifikasi.form');
         Route::post('/peminjaman/{peminjaman}/verifikasi-kembali', [ApprovalController::class, 'verifikasiPengembalian'])->name('pengembalian.verifikasi');
@@ -84,28 +87,34 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:admin'])->group(functi
         Route::get('/peminjaman/{peminjaman}/laporan-masalah', [LaporanController::class, 'create'])->name('laporan.create');
         Route::post('/peminjaman/{peminjaman}/laporan-masalah', [LaporanController::class, 'store'])->name('laporan.store');
 
-        // Stock Opname
+        // Menu Stock Opname
         Route::get('/stock-opname', [StockOpnameController::class, 'index'])->name('stock-opname.index');
-        Route::get('/stock-opname/buat', [StockOpnameController::class, 'create'])->name('stock-opname.create');
+        Route::get('/stock-opname/create', [StockOpnameController::class, 'create'])->name('stock-opname.create');
         Route::post('/stock-opname', [StockOpnameController::class, 'store'])->name('stock-opname.store');
-        // Menu Stock Opname (Admin Pengelola)
-        Route::get('/stock-opname', [App\Http\Controllers\StockOpnameController::class, 'index'])->name('admin.stock_opname.index');
-        Route::post('/stock-opname/{id}', [App\Http\Controllers\StockOpnameController::class, 'update'])->name('admin.stock_opname.update');
+        Route::post('/stock-opname/{id}', [StockOpnameController::class, 'update'])->name('stock-opname.update');
+
     });
 
     // ----------------------------------------------------
     // KHUSUS ADMIN PERSETUJUAN
     // ----------------------------------------------------
     Route::middleware('can:is-persetujuan')->group(function () {
+        
         // Approval Tahap 2
         Route::post('/peminjaman/{peminjaman}/approve-persetujuan', [ApprovalController::class, 'approvePersetujuan'])->name('approve.persetujuan');
-        // Khusus Admin Persetujuan
-    Route::get('/persetujuan', [App\Http\Controllers\PersetujuanController::class, 'index'])->name('admin.persetujuan.index');
-    Route::get('/persetujuan/{id}', [App\Http\Controllers\PersetujuanController::class, 'show'])->name('admin.persetujuan.show');
-    Route::post('/persetujuan/{id}/approve', [App\Http\Controllers\PersetujuanController::class, 'approve'])->name('admin.persetujuan.approve');
-    Route::post('/persetujuan/{id}/reject', [App\Http\Controllers\PersetujuanController::class, 'reject'])->name('admin.persetujuan.reject');
         
+        // Daftar Antrean Persetujuan (Menggunakan PersetujuanController yang benar)
+        Route::get('/persetujuan', [PersetujuanController::class, 'index'])->name('persetujuan.index');
+        Route::get('/persetujuan/{id}', [PersetujuanController::class, 'show'])->name('persetujuan.show');
+        Route::post('/persetujuan/{id}/approve', [PersetujuanController::class, 'approve'])->name('persetujuan.approve');
+        Route::post('/persetujuan/{id}/reject', [PersetujuanController::class, 'reject'])->name('persetujuan.reject');
+
         // Keputusan atas Laporan Kerusakan
         Route::post('/laporan/{laporan}/keputusan', [ApprovalController::class, 'keputusanLaporan'])->name('laporan.keputusan');
+        
+        Route::get('/register-admin', [AuthController::class, 'showAdminRegisterForm'])->name('admin.register');
+        Route::post('/register-admin', [AuthController::class, 'registerAdmin'])->name('admin.register.post');
+
     });
+
 });

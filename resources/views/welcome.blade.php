@@ -1,3 +1,5 @@
+welcome blade
+
 @extends('layouts.app')
 
 @section('content')

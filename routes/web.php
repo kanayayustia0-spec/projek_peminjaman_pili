@@ -25,6 +25,10 @@ Route::post('/register', [AuthController::class, 'register'])->name('register.po
 // Halaman Informasi Umum (Tanpa Login)
 Route::get('/cara-kerja', [PeminjamanController::class, 'caraKerja'])->name('cara-kerja');
 
+// ==========================================
+// HALAMAN INFORMASI (Cara Kerja)
+// ==========================================
+Route::get('/cara-kerja', [PeminjamanController::class, 'caraKerja'])->name('cara-kerja');
 
 // ==========================================
 // ROUTES UNTUK PEMINJAM (USER) - WAJIB LOGIN
@@ -32,6 +36,7 @@ Route::get('/cara-kerja', [PeminjamanController::class, 'caraKerja'])->name('car
 Route::middleware(['auth'])->group(function () {
     
     // Dashboard & Beranda User
+    // Dashboard User / Beranda
     Route::get('/dashboard', [PeminjamanController::class, 'index'])->name('dashboard');
 
     // Katalog Barang 
@@ -49,6 +54,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/peminjaman/{peminjaman}/terima', [PeminjamanController::class, 'terimaAset'])->name('peminjaman.terima');
 
     // Pengembalian Aset (Sinkron dengan formPengembalian di Controller)
+    // Pengembalian Aset
     Route::get('/peminjaman/{peminjaman}/pengembalian', [PeminjamanController::class, 'formPengembalian'])->name('peminjaman.pengembalian.form');
     Route::post('/peminjaman/{peminjaman}/pengembalian', [PeminjamanController::class, 'prosesPengembalian'])->name('peminjaman.pengembalian.proses');
 
@@ -104,6 +110,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:admin'])->group(functi
         Route::post('/peminjaman/{peminjaman}/approve-persetujuan', [ApprovalController::class, 'approvePersetujuan'])->name('approve.persetujuan');
         
         // Daftar Antrean Persetujuan (Menggunakan PersetujuanController yang benar)
+        // Daftar Antrean Persetujuan
         Route::get('/persetujuan', [PersetujuanController::class, 'index'])->name('persetujuan.index');
         Route::get('/persetujuan/{id}', [PersetujuanController::class, 'show'])->name('persetujuan.show');
         Route::post('/persetujuan/{id}/approve', [PersetujuanController::class, 'approve'])->name('persetujuan.approve');

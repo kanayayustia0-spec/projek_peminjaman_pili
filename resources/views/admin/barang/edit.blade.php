@@ -70,8 +70,8 @@
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-1">Kategori Barang</label>
                         <select name="kategori" required class="w-full border-gray-300 rounded-lg p-2.5 bg-gray-50 focus:ring-pili-primary focus:border-pili-primary border">
-                            @foreach(['Alat Elektronik & Dokumentasi', 'Alat Navigasi & Survei Lapangan', 'Perlengkapan Logistik & Camping', 'Perlengkapan Komunikasi & Keselamatan', 'Perlengkapan Sosialisasi & Edukasi', 'Kendaraan Operasional'] as $kat)
-                                <option value="{{ $kat }}" {{ $barang->kategori == $kat ? 'selected' : '' }}>{{ $kat }}</option>
+                            @foreach(\App\Models\Barang::KATEGORI_LIST as $code => $label)
+                                <option value="{{ $label }}" {{ (old('kategori', $barang->kategori) == $label || old('kategori', $barang->kategori_label) == $label) ? 'selected' : '' }}>{{ $label }}</option>
                             @endforeach
                         </select>
                     </div>

@@ -5,9 +5,26 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Barang;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
-class BarangController extends Controller
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
+
+class BarangController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware(function ($request, $next) {
+                $admin = Auth::guard('admin')->user();
+                if ($admin && $admin->role !== 'pengelola') {
+                    return redirect()->route('admin.dashboard')->with('error', 'Akses ditolak: Fitur Register Aset hanya dapat diakses oleh Admin Pengelola.');
+                }
+                return $next($request);
+            })
+        ];
+    }
+
     // Menampilkan daftar semua aset
     public function index()
     {
@@ -57,6 +74,13 @@ class BarangController extends Controller
         Barang::create($data);
 
         return redirect()->route('admin.barang.index')->with('success', 'Barang baru berhasil ditambahkan!');
+    }
+
+    // Menampilkan detail atau form edit aset
+    public function show($id)
+    {
+        $barang = Barang::findOrFail($id);
+        return view('admin.barang.edit', compact('barang'));
     }
 
     // Menampilkan form edit aset

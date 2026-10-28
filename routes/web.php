@@ -10,7 +10,6 @@ use App\Http\Controllers\Admin\BastaController;
 use App\Http\Controllers\Admin\LaporanController;
 use App\Http\Controllers\Admin\StockOpnameController;
 use App\Http\Controllers\Admin\PersetujuanController;
-use App\Http\Controllers\AdminRegisterController;
 
 // ==========================================
 // ROUTE AUTENTIKASI (LOGIN, LOGOUT, REGISTER)
@@ -22,11 +21,8 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.post');
 
-// Halaman Informasi Umum (Tanpa Login)
-Route::get('/cara-kerja', [PeminjamanController::class, 'caraKerja'])->name('cara-kerja');
-
 // ==========================================
-// HALAMAN INFORMASI (Cara Kerja)
+// HALAMAN INFORMASI (Cara Kerja - Tanpa Login)
 // ==========================================
 Route::get('/cara-kerja', [PeminjamanController::class, 'caraKerja'])->name('cara-kerja');
 
@@ -48,13 +44,15 @@ Route::middleware(['auth'])->group(function () {
     // Alur Peminjaman
     Route::get('/peminjaman/buat', [PeminjamanController::class, 'create'])->name('peminjaman.create');
     Route::post('/peminjaman', [PeminjamanController::class, 'store'])->name('peminjaman.store');
-    Route::get('/peminjaman/{peminjaman}', [PeminjamanController::class, 'show'])->name('peminjaman.show');
+    Route::get('/peminjaman/export-excel', [PeminjamanController::class, 'exportExcel'])->name('peminjaman.export');
+    Route::get('/peminjaman/{peminjaman}', [PeminjamanController::class, 'show'])->name('peminjaman.show')->withoutMiddleware(['auth'])->middleware(['auth:web,admin']);
+    Route::get('/peminjaman/{peminjaman}/struk', [PeminjamanController::class, 'struk'])->name('peminjaman.struk')->withoutMiddleware(['auth'])->middleware(['auth:web,admin']);
 
-    // Terima Aset (BASTA)
+    // Terima Aset / Konfirmasi Ambil di Gudang
     Route::post('/peminjaman/{peminjaman}/terima', [PeminjamanController::class, 'terimaAset'])->name('peminjaman.terima');
+    Route::post('/peminjaman/{peminjaman}/ambil', [PeminjamanController::class, 'konfirmasiAmbil'])->name('peminjaman.ambil');
 
     // Pengembalian Aset (Sinkron dengan formPengembalian di Controller)
-    // Pengembalian Aset
     Route::get('/peminjaman/{peminjaman}/pengembalian', [PeminjamanController::class, 'formPengembalian'])->name('peminjaman.pengembalian.form');
     Route::post('/peminjaman/{peminjaman}/pengembalian', [PeminjamanController::class, 'prosesPengembalian'])->name('peminjaman.pengembalian.proses');
 
@@ -69,59 +67,46 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:admin'])->group(functi
     // Dashboard & Rekap (Bisa diakses kedua role admin)
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/laporan-peminjaman', [DashboardController::class, 'rekapPeminjaman'])->name('rekap');
+    Route::get('/laporan-peminjaman/export-excel', [DashboardController::class, 'exportExcel'])->name('rekap.export');
 
-    // ----------------------------------------------------
-    // KHUSUS ADMIN PENGELOLA
-    // ----------------------------------------------------
-    Route::middleware('can:is-pengelola')->group(function () {
-        
-        // Kelola Barang
-        Route::resource('barang', BarangController::class);
+    // Aksi Persetujuan Bersama (Bisa diakses Pengelola maupun Persetujuan)
+    Route::post('/peminjaman/{peminjaman}/approve-langsung', [ApprovalController::class, 'approveLangsung'])->name('approve.langsung');
+    Route::post('/peminjaman/{peminjaman}/reset-approval', [ApprovalController::class, 'resetApproval'])->name('approve.reset');
 
-        // Approval Tahap 1
-        Route::post('/peminjaman/{peminjaman}/approve-pengelola', [ApprovalController::class, 'approvePengelola'])->name('approve.pengelola');
+    // Aset & Inventaris (Bisa diakses kedua role admin)
+    Route::resource('barang', BarangController::class);
 
-        // BASTA (Serah Terima)
-        Route::get('/peminjaman/{peminjaman}/basta', [BastaController::class, 'create'])->name('basta.create');
-        Route::post('/peminjaman/{peminjaman}/basta', [BastaController::class, 'store'])->name('basta.store');
+    // Menu Stock Opname (Bisa diakses kedua role admin)
+    Route::get('/stock-opname', [StockOpnameController::class, 'index'])->name('stock-opname.index');
+    Route::get('/stock-opname/create', [StockOpnameController::class, 'create'])->name('stock-opname.create');
+    Route::post('/stock-opname', [StockOpnameController::class, 'store'])->name('stock-opname.store');
+    Route::post('/stock-opname/{id}', [StockOpnameController::class, 'update'])->name('stock-opname.update');
 
-        // Verifikasi Pengembalian
-        Route::get('/peminjaman/{peminjaman}/verifikasi-kembali', [ApprovalController::class, 'formVerifikasiPengembalian'])->name('pengembalian.verifikasi.form');
-        Route::post('/peminjaman/{peminjaman}/verifikasi-kembali', [ApprovalController::class, 'verifikasiPengembalian'])->name('pengembalian.verifikasi');
+    // BASTA (Serah Terima)
+    Route::get('/peminjaman/{peminjaman}/basta', [BastaController::class, 'create'])->name('basta.create');
+    Route::post('/peminjaman/{peminjaman}/basta', [BastaController::class, 'store'])->name('basta.store');
 
-        // Laporan Kerusakan
-        Route::get('/peminjaman/{peminjaman}/laporan-masalah', [LaporanController::class, 'create'])->name('laporan.create');
-        Route::post('/peminjaman/{peminjaman}/laporan-masalah', [LaporanController::class, 'store'])->name('laporan.store');
+    // Verifikasi Pengembalian
+    Route::get('/peminjaman/{peminjaman}/verifikasi-kembali', [ApprovalController::class, 'formVerifikasiPengembalian'])->name('pengembalian.verifikasi.form');
+    Route::post('/peminjaman/{peminjaman}/verifikasi-kembali', [ApprovalController::class, 'verifikasiPengembalian'])->name('pengembalian.verifikasi');
 
-        // Menu Stock Opname
-        Route::get('/stock-opname', [StockOpnameController::class, 'index'])->name('stock-opname.index');
-        Route::get('/stock-opname/create', [StockOpnameController::class, 'create'])->name('stock-opname.create');
-        Route::post('/stock-opname', [StockOpnameController::class, 'store'])->name('stock-opname.store');
-        Route::post('/stock-opname/{id}', [StockOpnameController::class, 'update'])->name('stock-opname.update');
+    // Laporan Kerusakan & Keputusan
+    Route::get('/peminjaman/{peminjaman}/laporan-masalah', [LaporanController::class, 'create'])->name('laporan.create');
+    Route::post('/peminjaman/{peminjaman}/laporan-masalah', [LaporanController::class, 'store'])->name('laporan.store');
+    Route::post('/laporan/{laporan}/keputusan', [ApprovalController::class, 'keputusanLaporan'])->name('laporan.keputusan');
 
-    });
+    // Approval Tahap 1 & Tahap 2
+    Route::post('/peminjaman/{peminjaman}/approve-pengelola', [ApprovalController::class, 'approvePengelola'])->name('approve.pengelola');
+    Route::post('/peminjaman/{peminjaman}/approve-persetujuan', [ApprovalController::class, 'approvePersetujuan'])->name('approve.persetujuan');
 
-    // ----------------------------------------------------
-    // KHUSUS ADMIN PERSETUJUAN
-    // ----------------------------------------------------
-    Route::middleware('can:is-persetujuan')->group(function () {
-        
-        // Approval Tahap 2
-        Route::post('/peminjaman/{peminjaman}/approve-persetujuan', [ApprovalController::class, 'approvePersetujuan'])->name('approve.persetujuan');
-        
-        // Daftar Antrean Persetujuan (Menggunakan PersetujuanController yang benar)
-        // Daftar Antrean Persetujuan
-        Route::get('/persetujuan', [PersetujuanController::class, 'index'])->name('persetujuan.index');
-        Route::get('/persetujuan/{id}', [PersetujuanController::class, 'show'])->name('persetujuan.show');
-        Route::post('/persetujuan/{id}/approve', [PersetujuanController::class, 'approve'])->name('persetujuan.approve');
-        Route::post('/persetujuan/{id}/reject', [PersetujuanController::class, 'reject'])->name('persetujuan.reject');
+    // Daftar Antrean Persetujuan & Detail
+    Route::get('/persetujuan', [PersetujuanController::class, 'index'])->name('persetujuan.index');
+    Route::get('/persetujuan/{id}', [PersetujuanController::class, 'show'])->name('persetujuan.show');
+    Route::post('/persetujuan/{id}/approve', [PersetujuanController::class, 'approve'])->name('persetujuan.approve');
+    Route::post('/persetujuan/{id}/reject', [PersetujuanController::class, 'reject'])->name('persetujuan.reject');
 
-        // Keputusan atas Laporan Kerusakan
-        Route::post('/laporan/{laporan}/keputusan', [ApprovalController::class, 'keputusanLaporan'])->name('laporan.keputusan');
-        
-        Route::get('/register-admin', [AuthController::class, 'showAdminRegisterForm'])->name('admin.register');
-        Route::post('/register-admin', [AuthController::class, 'registerAdmin'])->name('admin.register.post');
-
-    });
+    // Tambah Admin
+    Route::get('/register-admin', [AuthController::class, 'showAdminRegisterForm'])->name('register-admin');
+    Route::post('/register-admin', [AuthController::class, 'registerAdmin'])->name('register-admin.post');
 
 });

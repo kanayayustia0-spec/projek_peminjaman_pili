@@ -3,12 +3,35 @@
 @section('content')
 <div class="max-w-3xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
     
-    <div class="mb-6 flex justify-between items-center print:hidden">
-        <a href="{{ route('peminjaman.riwayat') }}" class="text-gray-500 hover:text-pili-primary font-bold">&larr; Kembali ke Riwayat</a>
-        <button onclick="window.print()" class="bg-gray-800 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-black shadow-md flex items-center gap-2 transition">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-            Cetak Struk / PDF
-        </button>
+    <div class="mb-6 flex flex-wrap justify-between items-center gap-3 print:hidden">
+        <a href="{{ route('peminjaman.riwayat') }}" class="text-gray-500 hover:text-pili-primary font-bold text-sm flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Kembali ke Riwayat
+        </a>
+
+        <div class="flex flex-wrap items-center gap-2">
+            @if($peminjaman->status_keseluruhan == 'Disetujui' && $peminjaman->user_id === Auth::id())
+                <form action="{{ route('peminjaman.ambil', $peminjaman->id) }}" method="POST" onsubmit="return confirm('Konfirmasi bahwa barang fisik telah Anda ambil di gudang?')">
+                    @csrf
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold shadow-md flex items-center gap-2 transition">
+                        <svg class="w-4 h-4 text-emerald-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                        <span>Barang Sudah Diambil</span>
+                    </button>
+                </form>
+            @endif
+
+            @if(in_array($peminjaman->status_keseluruhan, ['Aset Diserahkan', 'Sedang Digunakan', 'Terlambat']) && $peminjaman->user_id === Auth::id())
+                <a href="{{ route('peminjaman.pengembalian.form', $peminjaman->id) }}" class="bg-orange-500 hover:bg-orange-600 active:scale-95 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold shadow-md flex items-center gap-2 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
+                    <span>Ajukan Pengembalian</span>
+                </a>
+            @endif
+
+            <button onclick="window.print()" class="bg-gray-800 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold hover:bg-black shadow-md flex items-center gap-2 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                <span>Cetak Struk / PDF</span>
+            </button>
+        </div>
     </div>
 
     <!-- STRUK DIGITAL -->
@@ -16,8 +39,11 @@
         
         <!-- Header Struk -->
         <div class="text-center mb-8 border-b-2 border-dashed border-gray-300 pb-6">
-            <h1 class="text-3xl font-extrabold text-gray-900 tracking-widest uppercase">PILI</h1>
-            <p class="text-sm text-gray-500">Green Network - Sistem Manajemen Aset</p>
+            <img src="{{ asset('images/logo.png') }}" alt="Logo PILI" class="h-16 w-auto mx-auto mb-3 object-contain">
+            <h1 class="text-2xl font-black text-gray-900 tracking-wider uppercase">YAYASAN PILI GREEN NETWORK</h1>
+            <p class="text-xs text-gray-500 font-semibold">Sistem Manajemen Aset</p>
+            <p class="text-xs text-gray-500 mt-1">Jl. Tumenggung Wiradireja No.216, RT.06/RW.09, Cimahpar, Kec. Bogor Utara, Kota Bogor, Jawa Barat 16155</p>
+            <p class="text-xs text-gray-500">Email: piligreennetwork@gmail.com</p>
             <p class="text-xs text-gray-400 mt-2">====================================</p>
             <h2 class="text-xl font-bold text-gray-800 mt-4 uppercase">Detail Transaksi Aset</h2>
             <p class="text-sm font-bold text-gray-500 mt-1">KODE TRX: #PILI-{{ str_pad($peminjaman->id, 5, '0', STR_PAD_LEFT) }}</p>

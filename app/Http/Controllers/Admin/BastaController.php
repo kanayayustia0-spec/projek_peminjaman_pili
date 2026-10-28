@@ -8,14 +8,21 @@ use App\Models\Basta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
+use Illuminate\Support\Facades\Auth;
+
 class BastaController extends Controller
 {
     // Menampilkan form BASTA untuk diisi Admin Pengelola
     public function create(Peminjaman $peminjaman)
     {
+        // Pastikan hanya admin pengelola yang bisa memproses BASTA
+        if (Auth::guard('admin')->user()->role !== 'pengelola') {
+            return redirect()->route('admin.dashboard')->with('error', 'Akses ditolak: BASTA hanya dapat diproses oleh Admin Pengelola.');
+        }
+
         // Pastikan status sudah disetujui kedua belah pihak
         if ($peminjaman->status_pengelola !== 'Disetujui' || $peminjaman->status_persetujuan !== 'Disetujui') {
-            abort(403, 'Peminjaman belum disetujui sepenuhnya.');
+            return redirect()->route('admin.dashboard')->with('error', 'Peminjaman belum disetujui sepenuhnya.');
         }
 
         return view('admin.basta.create', compact('peminjaman'));
@@ -24,6 +31,9 @@ class BastaController extends Controller
     // Memproses form BASTA dan Tanda Tangan Digital
     public function store(Request $request, Peminjaman $peminjaman)
     {
+        if (Auth::guard('admin')->user()->role !== 'pengelola') {
+            return redirect()->route('admin.dashboard')->with('error', 'Akses ditolak: BASTA hanya dapat diproses oleh Admin Pengelola.');
+        }
         $request->validate([
             'tanggal_serah' => 'required|date',
             'jam_serah' => 'required',

@@ -1,17 +1,23 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+<div class="max-w-7xl mx-auto py-5 sm:py-8 px-3.5 sm:px-6 lg:px-8">
     
-    <div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-gray-200 pb-5">
+    <div class="mb-6 sm:mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-3 sm:gap-4 border-b border-gray-200 pb-4 sm:pb-5">
         <div>
-            <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Riwayat Peminjaman Saya</h1>
-            <p class="text-gray-500 text-sm mt-1">Pantau status pengajuan, detail transaksi, dan pengembalian aset Anda.</p>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Riwayat Peminjaman Saya</h1>
+            <p class="text-gray-500 text-xs sm:text-sm mt-0.5 sm:mt-1">Pantau status pengajuan, detail transaksi, cetak bukti struk, dan pengembalian aset Anda.</p>
         </div>
-        <a href="{{ route('peminjaman.create') }}" class="bg-pili-primary hover:bg-pili-dark text-white font-extrabold py-3 px-6 rounded-xl shadow-md transition flex items-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-            Pinjam Aset Baru
-        </a>
+        <div class="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+            <a href="{{ route('peminjaman.export') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 sm:py-3 px-3 sm:px-5 rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 text-xs sm:text-sm text-center">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                <span>Export Excel</span>
+            </a>
+            <a href="{{ route('peminjaman.create') }}" class="bg-pili-primary hover:bg-pili-dark text-white font-extrabold py-2.5 sm:py-3 px-3 sm:px-6 rounded-xl shadow-md transition flex items-center justify-center gap-1.5 text-xs sm:text-sm text-center">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                <span>+ Pinjam Aset</span>
+            </a>
+        </div>
     </div>
 
     <!-- Alert Notifikasi -->
@@ -53,7 +59,8 @@
                     <span class="inline-block px-3 py-1.5 text-[11px] uppercase font-bold tracking-wider rounded-lg border
                         {{ $row->status_keseluruhan == 'Disetujui' ? 'bg-blue-50 text-blue-700 border-blue-200' : '' }}
                         {{ in_array($row->status_keseluruhan, ['Aset Diserahkan', 'Sedang Digunakan']) ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : '' }}
-                        {{ $row->status_keseluruhan == 'Menunggu Pengecekan Gudang' ? 'bg-orange-50 text-orange-700 border-orange-200 animate-pulse' : '' }}
+                        {{ in_array($row->status_keseluruhan, ['Menunggu Konfirmasi Pengembalian', 'Menunggu Pengecekan Gudang']) ? 'bg-amber-50 text-amber-800 border-amber-300 animate-pulse' : '' }}
+                        {{ $row->status_keseluruhan == 'Perlu Tindak Lanjut' ? 'bg-rose-50 text-rose-700 border-rose-300 font-bold' : '' }}
                         {{ $row->status_keseluruhan == 'Terlambat' ? 'bg-red-50 text-red-700 border-red-200 animate-pulse' : '' }}
                         {{ $row->status_keseluruhan == 'Selesai' ? 'bg-green-50 text-green-700 border-green-200' : '' }}
                         {{ $row->status_keseluruhan == 'Menunggu Persetujuan' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : '' }}
@@ -61,6 +68,13 @@
                     ">
                         Status: {{ $row->status_keseluruhan }}
                     </span>
+
+                    @if($row->status_keseluruhan == 'Ditolak')
+                        <div class="mt-2.5 bg-rose-50 border border-rose-200 p-2.5 rounded-xl text-xs text-rose-700">
+                            <span class="font-bold block text-[11px]">Alasan Penolakan:</span>
+                            <span class="italic text-[11px]">{{ $row->alasan_penolakan ?? 'Pengajuan belum memenuhi syarat peminjaman.' }}</span>
+                        </div>
+                    @endif
                 </div>
 
                 <!-- Card Body -->
@@ -88,28 +102,54 @@
                 <div class="p-5 bg-white border-t border-gray-50 flex flex-col gap-3">
                     
                     @if($row->status_keseluruhan == 'Disetujui')
-                        <button class="w-full bg-blue-100 text-blue-700 font-bold py-2.5 px-4 rounded-xl text-sm border border-blue-200 cursor-not-allowed">
-                            Menunggu Pengambilan di Gudang
-                        </button>
+                        <div class="bg-blue-50/80 p-3.5 rounded-2xl border border-blue-200 flex flex-col gap-2.5">
+                            <div class="flex items-center gap-2 text-xs font-bold text-blue-800">
+                                <span class="relative flex h-2.5 w-2.5">
+                                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                  <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-600"></span>
+                                </span>
+                                <span>Menunggu Pengambilan di Gudang</span>
+                            </div>
+                            <form action="{{ route('peminjaman.ambil', $row->id) }}" method="POST" onsubmit="return confirm('Konfirmasi bahwa barang fisik telah Anda ambil di gudang?')">
+                                @csrf
+                                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-extrabold py-2.5 px-4 rounded-xl text-xs sm:text-sm transition text-center shadow-md flex items-center justify-center gap-2 group">
+                                    <svg class="w-4 h-4 text-emerald-100 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                    <span>Barang Sudah Diambil</span>
+                                </button>
+                            </form>
+                        </div>
                     @endif
 
                     @if(in_array($row->status_keseluruhan, ['Aset Diserahkan', 'Sedang Digunakan', 'Terlambat']))
-                        <a href="{{ route('peminjaman.pengembalian.form', $row->id) }}" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-extrabold py-3 px-4 rounded-xl text-sm transition text-center shadow-md flex justify-center items-center gap-2">
+                        <a href="{{ route('peminjaman.pengembalian.form', $row->id) }}" class="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold py-3 px-4 rounded-xl text-xs sm:text-sm transition text-center shadow-md hover:shadow-lg flex justify-center items-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
-                            Ajukan Pengembalian Aset
+                            <span>Ajukan Pengembalian Aset</span>
                         </a>
                     @endif
 
-                    @if($row->status_keseluruhan == 'Menunggu Pengecekan Gudang')
-                        <button disabled class="w-full bg-gray-100 text-gray-500 font-bold py-2.5 px-4 rounded-xl text-sm border border-gray-200 cursor-not-allowed flex justify-center items-center gap-2">
-                            <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                            Gudang Sedang Mengecek...
-                        </button>
+                    @if(in_array($row->status_keseluruhan, ['Menunggu Konfirmasi Pengembalian', 'Menunggu Pengecekan Gudang']))
+                        <div class="w-full bg-amber-50 text-amber-800 font-bold py-2.5 px-3 rounded-xl text-xs border border-amber-200 flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4 animate-spin text-amber-600 flex-shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            <span class="text-center">Menunggu Verifikasi Gudang...</span>
+                        </div>
                     @endif
 
-                    <a href="{{ route('peminjaman.show', $row->id) }}" class="w-full bg-white border-2 border-gray-200 hover:bg-gray-50 hover:border-pili-primary text-gray-700 font-bold py-2.5 px-4 rounded-xl text-sm transition text-center">
-                        Buka Detail Transaksi
-                    </a>
+                    @if($row->status_keseluruhan == 'Perlu Tindak Lanjut')
+                        <div class="w-full bg-rose-50 text-rose-800 font-bold py-2.5 px-3 rounded-xl text-xs border border-rose-200 flex items-center justify-center gap-2 text-center">
+                            <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            <span>Pemeriksaan Menemukan Kendala</span>
+                        </div>
+                    @endif
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <a href="{{ route('peminjaman.struk', $row->id) }}" class="bg-blue-50 border border-blue-200 hover:bg-blue-100 text-pili-primary font-bold py-2.5 px-3 rounded-xl text-xs transition text-center flex items-center justify-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                            <span>Struk</span>
+                        </a>
+                        <a href="{{ route('peminjaman.show', $row->id) }}" class="bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-bold py-2.5 px-3 rounded-xl text-xs transition text-center">
+                            Detail
+                        </a>
+                    </div>
                 </div>
             </div>
         @empty

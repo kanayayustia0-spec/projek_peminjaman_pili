@@ -86,6 +86,9 @@ class AuthController extends Controller
             'username' => $request->username,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'jabatan' => $request->jabatan ?? 'Staff',
+            'divisi_program' => $request->divisi_program ?? 'Umum',
+            'no_hp' => $request->no_hp ?? '-',
         ]);
 
         // Otomatis login setelah registrasi berhasil

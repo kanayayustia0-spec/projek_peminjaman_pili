@@ -34,7 +34,7 @@ class DashboardController extends Controller
         // ========================================================
         if ($admin->role == 'persetujuan') {
             // Hitung jumlah status
-            $menunggu = Peminjaman::where('status_persetujuan', 'Menunggu Persetujuan')->count();
+            $menunggu = Peminjaman::whereIn('status_persetujuan', ['Pending', 'Menunggu Persetujuan'])->count();
             
             $disetujuiBulanIni = Peminjaman::where('status_persetujuan', 'Disetujui')
                                     ->whereMonth('created_at', date('m'))
@@ -44,7 +44,7 @@ class DashboardController extends Controller
 
             // Ambil 5 antrean paling lama yang belum disetujui
             $antreanTerbaru = Peminjaman::with('user')
-                                ->where('status_persetujuan', 'Menunggu Persetujuan')
+                                ->whereIn('status_persetujuan', ['Pending', 'Menunggu Persetujuan'])
                                 ->orderBy('created_at', 'asc')
                                 ->take(5)
                                 ->get();
@@ -61,6 +61,32 @@ class DashboardController extends Controller
         
         // Return ke view admin.dashboard.index dengan data spesifik Pengelola
         return view('admin.dashboard.index', compact('peminjamans', 'admin', 'totalBarang', 'peminjamanAktif'));
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $query = Peminjaman::with(['user', 'items.barang', 'basta', 'pengembalian']);
+
+        // Filter Rentang Waktu
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('created_at', [
+                $request->start_date . ' 00:00:00', 
+                $request->end_date . ' 23:59:59'
+            ]);
+        }
+
+        // Filter Status
+        if ($request->filled('status')) {
+            $query->where('status_keseluruhan', $request->status);
+        }
+
+        $peminjamans = $query->orderBy('created_at', 'desc')->get();
+        $filename = 'Rekap_Peminjaman_Aset_PILI_' . date('Ymd_His') . '.xls';
+
+        return response()->view('admin.dashboard.export_excel', compact('peminjamans'))
+            ->header('Content-Type', 'application/vnd.ms-excel; charset=utf-8')
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->header('Cache-Control', 'max-age=0');
     }
 
     public function rekapPeminjaman(Request $request)

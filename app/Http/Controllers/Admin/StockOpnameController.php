@@ -3,16 +3,32 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use App\Models\StockOpname;
 use App\Models\Barang;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class StockOpnameController extends Controller
+class StockOpnameController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware(function ($request, $next) {
+                $admin = Auth::guard('admin')->user();
+                if ($admin && $admin->role !== 'pengelola') {
+                    return redirect()->route('admin.dashboard')->with('error', 'Akses ditolak: Fitur Stock Opname hanya dapat diakses oleh Admin Pengelola.');
+                }
+                return $next($request);
+            })
+        ];
+    }
     public function index()
     {
         $opnames = StockOpname::orderBy('tanggal', 'desc')->get();
-        return view('admin.stockopname.index', compact('opnames'));
+        $barangs = Barang::all()->keyBy('id');
+        return view('admin.stockopname.index', compact('opnames', 'barangs'));
     }
 
     public function create()
@@ -63,5 +79,18 @@ class StockOpnameController extends Controller
         ]);
 
         return redirect()->route('admin.stock-opname.index')->with('success', 'Data Stock Opname berhasil disimpan.');
+    }
+
+    public function update(Request $request, $id)
+    {
+        $opname = StockOpname::findOrFail($id);
+        $request->validate([
+            'rekomendasi' => 'nullable|string',
+            'tim_pemeriksa' => 'nullable|string',
+        ]);
+
+        $opname->update($request->only(['rekomendasi', 'tim_pemeriksa']));
+
+        return redirect()->route('admin.stock-opname.index')->with('success', 'Data Stock Opname berhasil diperbarui.');
     }
 }

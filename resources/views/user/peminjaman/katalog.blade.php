@@ -7,7 +7,7 @@
     <div class="flex flex-col sm:flex-row justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-8 gap-4">
         <h1 class="text-2xl font-extrabold text-gray-900">Katalog Aset PILI</h1>
         <div class="flex gap-3 w-full sm:w-auto">
-            <a href="{{ route('dashboard') }}" class="flex-1 sm:flex-none text-center bg-white border border-gray-300 text-gray-700 font-bold py-2.5 px-6 rounded-xl hover:bg-gray-50 transition">
+            <a href="{{ route('peminjaman.riwayat') }}" class="flex-1 sm:flex-none text-center bg-white border border-gray-300 text-gray-700 font-bold py-2.5 px-6 rounded-xl hover:bg-gray-50 transition">
                 Riwayat Peminjaman
             </a>
             <a href="{{ route('peminjaman.create') }}" class="flex-1 sm:flex-none text-center bg-pili-primary text-white font-bold py-2.5 px-6 rounded-xl shadow-md hover:bg-pili-dark transition flex justify-center items-center gap-2">
@@ -31,7 +31,7 @@
                             <!-- Foto Placeholder -->
                             <div class="w-full h-32 bg-gray-100 rounded-xl mb-3 flex items-center justify-center overflow-hidden">
                                 @if($barang->foto)
-                                    <img src="{{ asset('storage/'.$barang->foto) }}" class="object-cover w-full h-full">
+                                    <img src="{{ asset($barang->foto) }}" class="object-cover w-full h-full">
                                 @else
                                     <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                 @endif

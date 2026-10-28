@@ -37,15 +37,12 @@
 
             <!-- Kategori -->
             <div>
-                <label class="block text-sm font-medium text-gray-700">Kategori (Sesuai SOP)</label>
+                <label class="block text-sm font-medium text-gray-700">Kategori (Sesuai SOP PILI)</label>
                 <select name="kategori" required class="w-full border border-gray-300 rounded-lg p-2 mt-1">
                     <option value="">-- Pilih Kategori --</option>
-                    <option value="A" {{ old('kategori') == 'A' ? 'selected' : '' }}>A - Strategis / Risiko Tinggi (Kamera, Drone)</option>
-                    <option value="B" {{ old('kategori') == 'B' ? 'selected' : '' }}>B - Teknis Lapangan (Kompas, GPS)</option>
-                    <option value="C" {{ old('kategori') == 'C' ? 'selected' : '' }}>C - Multimedia (Tripod, Lighting)</option>
-                    <option value="D" {{ old('kategori') == 'D' ? 'selected' : '' }}>D - Operasional (HT, Genset)</option>
-                    <option value="E" {{ old('kategori') == 'E' ? 'selected' : '' }}>E - Kendaraan Operasional</option>
-                    <option value="F" {{ old('kategori') == 'F' ? 'selected' : '' }}>F - Inventaris Kantor</option>
+                    @foreach(\App\Models\Barang::KATEGORI_LIST as $code => $label)
+                        <option value="{{ $label }}" {{ old('kategori') == $label ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
                 </select>
             </div>
 

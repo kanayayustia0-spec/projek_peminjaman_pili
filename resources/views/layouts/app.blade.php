@@ -29,8 +29,12 @@
     
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        [x-cloak] { display: none !important; }
+        html, body { overflow-x: hidden; width: 100%; -webkit-tap-highlight-color: transparent; }
+    </style>
 </head>
-<body class="bg-gray-50 text-gray-800 antialiased font-sans flex flex-col min-h-screen">
+<body class="bg-gray-50 text-gray-800 antialiased font-sans flex flex-col min-h-screen overflow-x-hidden w-full">
 
     <!-- Top Navigation Bar -->
     <nav class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm" x-data="{ profileDropdown: false, mobileMenu: false }">
@@ -39,10 +43,10 @@
                 
                 <!-- Logo & Main Menu -->
                 <div class="flex items-center">
-                    <div class="flex-shrink-0 flex items-center gap-2">
-                        <div class="w-8 h-8 bg-pili-primary rounded-lg flex items-center justify-center text-white font-bold text-xl">P</div>
+                    <a href="{{ Auth::guard('admin')->check() ? route('admin.dashboard') : (Auth::check() ? route('dashboard') : route('login')) }}" class="flex-shrink-0 flex items-center gap-2.5 group">
+                        <img src="{{ asset('images/logo.png') }}" alt="Logo PILI Green Network" class="h-9 w-auto object-contain transition-transform group-hover:scale-105">
                         <span class="font-extrabold text-xl text-gray-900 tracking-tight">PILI<span class="text-pili-primary">Aset</span></span>
-                    </div>
+                    </a>
                     
                     <!-- Desktop Menu -->
                     <div class="hidden sm:ml-10 sm:flex sm:space-x-8">
@@ -52,12 +56,12 @@
                             
                             @if(Auth::guard('admin')->user()->role == 'pengelola')
                                 <a href="{{ route('admin.barang.index') }}" class="inline-flex items-center px-1 pt-1 border-b-2 {{ request()->routeIs('admin.barang.*') ? 'border-pili-primary text-gray-900 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300 font-medium' }} text-sm transition">Register Aset</a>
-                                
                                 <a href="{{ route('admin.stock-opname.index') }}" class="inline-flex items-center px-1 pt-1 border-b-2 {{ request()->routeIs('admin.stock-opname.*') ? 'border-pili-primary text-gray-900 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300 font-medium' }} text-sm transition">Stock Opname</a>
                             @endif
 
                             @if(Auth::guard('admin')->user()->role == 'persetujuan')
                                 <a href="{{ route('admin.persetujuan.index') }}" class="inline-flex items-center px-1 pt-1 border-b-2 {{ request()->routeIs('admin.persetujuan.*') ? 'border-pili-primary text-pili-primary font-bold' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-900 font-medium' }} text-sm transition">Antrean Persetujuan</a>
+                                <a href="{{ route('admin.register-admin') }}" class="inline-flex items-center px-1 pt-1 border-b-2 {{ request()->routeIs('admin.register-admin') ? 'border-pili-primary text-pili-primary font-bold' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-900 font-medium' }} text-sm transition">+ Tambah Admin</a>
                             @endif
 
                             <a href="{{ route('admin.rekap') }}" class="inline-flex items-center px-1 pt-1 border-b-2 {{ request()->routeIs('admin.rekap') ? 'border-pili-primary text-gray-900 font-bold' : 'border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300 font-medium' }} text-sm transition">Rekap Laporan</a>
@@ -126,7 +130,14 @@
         </div> <!-- Penutup max-w-7xl -->
 
         <!-- Mobile Menu Panel -->
-        <div x-show="mobileMenu" class="sm:hidden border-t border-gray-200 bg-white" style="display: none;">
+        <div x-show="mobileMenu" 
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 -translate-y-2"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 translate-y-0"
+             x-transition:leave-end="opacity-0 -translate-y-2"
+             class="sm:hidden border-t border-gray-200 bg-white shadow-xl" style="display: none;">
             <div class="pt-2 pb-3 space-y-1">
                 @if(Auth::guard('admin')->check())
                     <!-- Mobile Menu Admin -->
@@ -139,6 +150,7 @@
 
                     @if(Auth::guard('admin')->user()->role == 'persetujuan')
                         <a href="{{ route('admin.persetujuan.index') }}" class="block pl-3 pr-4 py-2 border-l-4 {{ request()->routeIs('admin.persetujuan.*') ? 'border-pili-primary bg-pili-light text-pili-primary font-bold' : 'border-transparent text-gray-500 font-medium' }} text-base">Antrean Persetujuan</a>
+                        <a href="{{ route('admin.register-admin') }}" class="block pl-3 pr-4 py-2 border-l-4 {{ request()->routeIs('admin.register-admin') ? 'border-pili-primary bg-pili-light text-pili-primary font-bold' : 'border-transparent text-gray-500 font-medium' }} text-base">+ Tambah Admin</a>
                     @endif
                     
                     <a href="{{ route('admin.rekap') }}" class="block pl-3 pr-4 py-2 border-l-4 {{ request()->routeIs('admin.rekap') ? 'border-pili-primary bg-pili-light text-pili-primary font-bold' : 'border-transparent text-gray-500 font-medium' }} text-base">Rekap Laporan</a>

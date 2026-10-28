@@ -12,14 +12,26 @@
             <div class="bg-gray-50 p-6 rounded-xl border">
                 <h3 class="font-bold text-gray-800 mb-4 border-b pb-2">Laporan dari Peminjam</h3>
                 <p class="text-sm mb-1"><strong>Nama:</strong> {{ $peminjaman->user->name }}</p>
-                <p class="text-sm mb-4"><strong>Tanggal Kembali:</strong> {{ $peminjaman->pengembalian->tanggal_pengembalian->format('d M Y, H:i') }}</p>
+                <p class="text-sm mb-4"><strong>Tanggal Kembali:</strong> {{ $peminjaman->pengembalian->tanggal_pengembalian ? \Carbon\Carbon::parse($peminjaman->pengembalian->tanggal_pengembalian)->format('d M Y, H:i') . ' WIB' : '-' }}</p>
                 
                 <div class="mb-4">
-                    <strong class="block text-sm mb-2">Foto Kondisi:</strong>
-                    <!-- Menampilkan foto yang diupload peminjam -->
-                    <a href="{{ asset('storage/' . $peminjaman->pengembalian->foto_kondisi_akhir) }}" target="_blank">
-                        <img src="{{ asset('storage/' . $peminjaman->pengembalian->foto_kondisi_akhir) }}" class="w-full h-48 object-cover rounded-lg border shadow-sm hover:opacity-90 transition">
-                    </a>
+                    <strong class="block text-sm mb-2">Foto Kondisi Fisik Barang:</strong>
+                    @php
+                        $foto = $peminjaman->pengembalian->foto_kondisi_akhir;
+                        $fotoUrl = $foto 
+                            ? (str_starts_with($foto, 'http') ? $foto : (str_starts_with($foto, 'uploads/') ? asset($foto) : asset('storage/' . $foto)))
+                            : null;
+                    @endphp
+                    @if($fotoUrl)
+                        <a href="{{ $fotoUrl }}" target="_blank" class="block group">
+                            <img src="{{ $fotoUrl }}" class="w-full h-48 object-cover rounded-lg border shadow-sm group-hover:opacity-90 transition">
+                            <span class="text-[11px] text-pili-primary font-bold mt-1 inline-block">Klik untuk melihat foto ukuran penuh &rarr;</span>
+                        </a>
+                    @else
+                        <div class="w-full h-32 bg-gray-100 rounded-lg flex items-center justify-center text-xs text-gray-400">
+                            Foto tidak tersedia
+                        </div>
+                    @endif
                 </div>
 
                 <div>

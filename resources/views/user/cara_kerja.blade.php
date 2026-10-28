@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+<div class="max-w-7xl mx-auto py-6 sm:py-12 px-3.5 sm:px-6 lg:px-8">
     
     <!-- Header Halaman -->
     <div class="text-center mb-16">
@@ -101,8 +101,25 @@
 
     </div>
 
+    <!-- Banner Unduh Dokumen Word Resmi -->
+    <div class="mt-12 max-w-2xl mx-auto bg-gradient-to-r from-blue-50 to-emerald-50 border border-blue-200 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+        <div class="flex items-center gap-3 text-left">
+            <div class="w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-md">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+            <div>
+                <h4 class="font-extrabold text-gray-900 text-sm sm:text-base">Buku Panduan Resmi Yayasan PILI</h4>
+                <p class="text-xs text-gray-500">Tersedia dokumen Word (.doc) lengkap untuk Staf, Admin Pengelola, dan Admin Persetujuan.</p>
+            </div>
+        </div>
+        <a href="{{ asset('documents/Panduan_Resmi_Sistem_Peminjaman_Aset_PILI_Green_Network.doc') }}" download class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm px-5 py-3 rounded-xl shadow transition shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            <span>Unduh File Word</span>
+        </a>
+    </div>
+
     <!-- Tombol CTA -->
-    <div class="mt-16 text-center">
+    <div class="mt-8 text-center">
         @auth
             <a href="{{ route('peminjaman.katalog') }}" class="inline-flex items-center gap-2 bg-gray-900 hover:bg-black text-white font-extrabold px-8 py-4 rounded-xl shadow-lg transition transform hover:-translate-y-1">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>

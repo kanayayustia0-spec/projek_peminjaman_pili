@@ -12,12 +12,23 @@ class ApprovalController extends Controller
     public function approvePengelola(Request $request, Peminjaman $peminjaman)
     {
         $request->validate([
-            'status' => 'required|in:Disetujui,Ditolak'
+            'status' => 'required|in:Disetujui,Ditolak',
+            'alasan' => 'nullable|string|max:500'
         ]);
 
-        $peminjaman->update(['status_pengelola' => $request->status]);
-        
+        $peminjaman->status_pengelola = $request->status;
+
+        if ($request->status === 'Ditolak') {
+            $peminjaman->status_keseluruhan = 'Ditolak';
+            $peminjaman->status_persetujuan = 'Ditolak';
+            $peminjaman->alasan_penolakan = $request->input('alasan') ?: 'Pengajuan ditolak oleh Admin Pengelola.';
+            $peminjaman->save();
+            return back()->with('error', 'Pengajuan telah ditolak oleh Admin Pengelola.');
+        }
+
+        $peminjaman->alasan_penolakan = null;
         $this->cekStatusKeseluruhan($peminjaman);
+        $peminjaman->save();
 
         return back()->with('success', 'Status pengelola berhasil diperbarui.');
     }
@@ -26,12 +37,22 @@ class ApprovalController extends Controller
     public function approvePersetujuan(Request $request, Peminjaman $peminjaman)
     {
         $request->validate([
-            'status' => 'required|in:Disetujui,Ditolak'
+            'status' => 'required|in:Disetujui,Ditolak',
+            'alasan' => 'nullable|string|max:500'
         ]);
 
-        $peminjaman->update(['status_persetujuan' => $request->status]);
-        
+        $peminjaman->status_persetujuan = $request->status;
+
+        if ($request->status === 'Ditolak') {
+            $peminjaman->status_keseluruhan = 'Ditolak';
+            $peminjaman->alasan_penolakan = $request->input('alasan') ?: 'Pengajuan ditolak oleh Admin Persetujuan.';
+            $peminjaman->save();
+            return back()->with('error', 'Pengajuan telah ditolak oleh Admin Persetujuan.');
+        }
+
+        $peminjaman->alasan_penolakan = null;
         $this->cekStatusKeseluruhan($peminjaman);
+        $peminjaman->save();
 
         return back()->with('success', 'Keputusan persetujuan berhasil diperbarui.');
     }
@@ -41,15 +62,44 @@ class ApprovalController extends Controller
     {
         // Jika salah satu menolak, transaksi langsung dibatalkan
         if ($peminjaman->status_pengelola === 'Ditolak' || $peminjaman->status_persetujuan === 'Ditolak') {
-            $peminjaman->update(['status_keseluruhan' => 'Ditolak']);
+            $peminjaman->status_keseluruhan = 'Ditolak';
             return;
         }
 
         // Jika keduanya menyetujui, transaksi berlanjut ke tahap BASTA
         if ($peminjaman->status_pengelola === 'Disetujui' && $peminjaman->status_persetujuan === 'Disetujui') {
-            $peminjaman->update(['status_keseluruhan' => 'Disetujui']);
+            $peminjaman->status_keseluruhan = 'Disetujui';
             return;
         }
+
+        // Jika belum keduanya disetujui
+        $peminjaman->status_keseluruhan = 'Menunggu Persetujuan';
+    }
+
+    // D. Persetujuan Sepenuhnya / Langsung (Bypass jika diperlukan oleh Admin)
+    public function approveLangsung(Peminjaman $peminjaman)
+    {
+        $peminjaman->update([
+            'status_pengelola' => 'Disetujui',
+            'status_persetujuan' => 'Disetujui',
+            'status_keseluruhan' => 'Disetujui',
+            'alasan_penolakan' => null
+        ]);
+
+        return back()->with('success', 'Pengajuan berhasil DISETUJUI SEPENUHNYA. Aset siap diserahterimakan (BASTA).');
+    }
+
+    // E. Reset Approval kembali ke Pending
+    public function resetApproval(Peminjaman $peminjaman)
+    {
+        $peminjaman->update([
+            'status_pengelola' => 'Pending',
+            'status_persetujuan' => 'Pending',
+            'status_keseluruhan' => 'Menunggu Persetujuan',
+            'alasan_penolakan' => null
+        ]);
+
+        return back()->with('success', 'Status pengajuan berhasil di-reset kembali ke Pending.');
     }
 
     // Menampilkan Halaman Crosscheck Pengembalian (Untuk Admin Pengelola)

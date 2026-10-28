@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Gate; // Pastikan ini di-import
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Admin;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -20,13 +22,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Definisikan Gate untuk role Admin di sini, TANPA registerPolicies()
-        Gate::define('is-pengelola', function ($admin) {
-            return $admin->role === 'pengelola';
+        // Definisikan Gate untuk role Admin yang mendukung guard auth:admin
+        Gate::define('is-pengelola', function ($user = null) {
+            $admin = Auth::guard('admin')->user() ?? $user;
+            return $admin instanceof Admin;
         });
 
-        Gate::define('is-persetujuan', function ($admin) {
-            return $admin->role === 'persetujuan';
+        Gate::define('is-persetujuan', function ($user = null) {
+            $admin = Auth::guard('admin')->user() ?? $user;
+            return $admin instanceof Admin;
         });
     }
 }

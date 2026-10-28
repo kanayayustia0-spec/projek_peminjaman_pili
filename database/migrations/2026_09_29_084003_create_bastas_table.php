@@ -17,9 +17,9 @@ return new class extends Migration {
             $table->json('kelengkapan');
             $table->string('foto_kondisi_awal');
             
-            $table->string('ttd_digital_pengelola');
+            $table->longText('ttd_digital_pengelola');
             $table->boolean('konfirmasi_checkbox_pengelola')->default(false);
-            $table->string('ttd_digital_peminjam');
+            $table->longText('ttd_digital_peminjam');
             $table->boolean('konfirmasi_checkbox_peminjam')->default(false);
             
             $table->timestamps();

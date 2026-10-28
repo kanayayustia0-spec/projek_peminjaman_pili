@@ -19,6 +19,21 @@ class Peminjaman extends Model
         'batas_waktu_approval' => 'datetime',
     ];
 
+    // Accessor kode transaksi rapi
+    public function getNomorTransaksiAttribute(): string
+    {
+        return 'TRX-PILI-' . $this->created_at->format('Ym') . '-' . str_pad($this->id, 4, '0', STR_PAD_LEFT);
+    }
+
+    // Accessor durasi peminjaman (hari)
+    public function getDurasiHariAttribute(): int
+    {
+        if ($this->tanggal_mulai && $this->tanggal_selesai) {
+            return max(1, (int) ceil($this->tanggal_mulai->floatDiffInDays($this->tanggal_selesai)));
+        }
+        return 1;
+    }
+
     // Relasi: Peminjaman ini milik 1 User
     public function user()
     {
@@ -53,40 +68,5 @@ class Peminjaman extends Model
     public function reminderLogs()
     {
         return $this->hasMany(ReminderLog::class);
-    }
-    // 1. Halaman Beranda (Daftar Barang + Search)
-    public function index(\Illuminate\Http\Request $request)
-    {
-        $query = \App\Models\Barang::query();
-
-        // Logika Fitur Search
-        if ($request->has('search') && $request->search != '') {
-            $search = $request->search;
-            $query->where('nama', 'like', "%{$search}%")
-                  ->orWhere('kode_inventaris', 'like', "%{$search}%")
-                  ->orWhere('kategori', 'like', "%{$search}%");
-        }
-
-        // Ambil barang dan kelompokkan per kategori
-        $kategoriBarang = $query->get()->groupBy('kategori');
-
-        return view('user.peminjaman.index', compact('kategoriBarang'));
-    }
-
-    // 2. Halaman Cara Kerja
-    public function caraKerja()
-    {
-        return view('user.cara_kerja');
-    }
-
-    // 3. Halaman Riwayat Peminjaman
-    public function riwayat()
-    {
-        $peminjamans = \App\Models\Peminjaman::with(['items.barang', 'basta', 'pengembalian'])
-                            ->where('user_id', \Illuminate\Support\Facades\Auth::id())
-                            ->orderBy('created_at', 'desc')
-                            ->get();
-                            
-        return view('user.peminjaman.riwayat', compact('peminjamans'));
     }
 }
